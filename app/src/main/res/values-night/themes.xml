@@ -1,9 +1,0 @@
-<resources>
-    <style name="Theme.RhinoWear" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/outfit_cape</item>
-        <item name="colorSecondary">@color/outfit_bow</item>
-        <item name="colorSurface">@color/surface_primary</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/black</item>
-    </style>
-</resources>

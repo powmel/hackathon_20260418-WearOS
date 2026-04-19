@@ -1,16 +1,17 @@
 # hackathon20260418-wear
 
-Pixel Watch / Wear OS companion app for the `hackathon20260413` mobile app.
+Flutter-based Wear OS companion app for the `hackathon20260413` mobile app.
 
-## Goal
+## Current scope
 
-- reflect app state and notification-related data on Pixel Watch
-- keep the Wear OS app code isolated from the main Flutter mobile app
-- define a clean sync boundary between phone and watch
+- rhino pet home screen tuned for small Wear OS displays
+- focus score, usage minutes, and fullness display
+- rhino mood derived from usage balance
+- score-based feeding action
+- outfit switching on watch
 
-## Planned Scope
+## Notes
 
-- Wear OS app scaffold
-- phone-to-watch data sync design
-- notification and state display on watch
-- future interaction flows from watch back to phone
+- this repo is Flutter-only
+- phone-to-watch sync is not wired yet
+- current watch data is stored locally with `shared_preferences`
