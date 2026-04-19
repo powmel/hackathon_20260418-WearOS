@@ -5,6 +5,8 @@ import '../constants/app_constants.dart';
 import '../providers/app_providers.dart';
 import '../services/notification_service.dart';
 import '../services/usage_stats_service.dart';
+import '../services/monitor_service.dart';
+import 'login_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});

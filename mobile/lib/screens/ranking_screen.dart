@@ -43,6 +43,7 @@ class _RankingScreenState extends ConsumerState<RankingScreen>
   int _selectedIndex = 0;
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
+  final _wearSync = WearSyncService();
 
   late final List<_RankingTab> _tabs = [
     _RankingTab(

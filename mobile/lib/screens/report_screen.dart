@@ -58,7 +58,7 @@ class ReportScreen extends ConsumerWidget {
               Expanded(
                 child: StatCard(
                   title: '節約時間',
-                  value: '${savedMinutes}分',
+                  value: '$savedMinutes分',
                   icon: Icons.savings,
                   color: Colors.green,
                 ),
@@ -396,7 +396,7 @@ class ReportScreen extends ConsumerWidget {
   String _formatDuration(Duration duration) {
     final hours = duration.inHours;
     final minutes = duration.inMinutes % 60;
-    if (hours > 0) return '${hours}時間${minutes}分';
+    if (hours > 0) return '$hours時間$minutes分';
     return '$minutes分';
   }
 }
