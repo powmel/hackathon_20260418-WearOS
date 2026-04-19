@@ -9,7 +9,10 @@ import '../providers/app_providers.dart';
 import '../services/usage_stats_service.dart';
 import '../services/notification_service.dart';
 import '../services/sound_service.dart';
+import '../services/wear_sync_service.dart';
 import '../widgets/common_widgets.dart';
+
+final _wearSync = WearSyncService();
 
 // ── デバッグ用: 0=実データ, 1=good, 2=warning, 3=over ──
 final _debugStateProvider = StateProvider<int>((ref) => 0);
@@ -28,6 +31,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _wearSync.init();
     _loadUsageData();
     _refreshTimer = Timer.periodic(
       const Duration(seconds: 30),
@@ -51,6 +55,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final totalMinutes =
         usages.fold<int>(0, (sum, u) => sum + u.usageTime.inMinutes);
 
+    // Sync usage data to Wear OS
+    final focusScore = max(0, 100 - totalMinutes);
+    final fullness = max(0, 100 - (totalMinutes * 100 ~/ max(timeLimit, 1)));
+    _wearSync.sendScoreUpdate(
+      focusScore: focusScore.clamp(0, 100),
+      usageMinutes: totalMinutes,
+      fullness: fullness.clamp(0, 100),
+    );
+
     if (totalMinutes > timeLimit) {
       final mode = ref.read(rhinoModeProvider);
       final soundEnabled = ref.read(soundEnabledProvider);
@@ -59,6 +72,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         await SoundService.playRhinoSound();
       }
       ref.read(overLimitCountProvider.notifier).increment();
+
+      // Send warning notification to Wear OS too
+      _wearSync.sendNotification(
+        title: 'サイが怒ってるよ！🦏',
+        body: '使用時間 ${totalMinutes}分 / 制限 ${timeLimit}分 を超えました',
+      );
     }
 
     setState(() => _isLoading = false);

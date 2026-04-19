@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(identify \"C:/Users/MISAWA/OneDrive - 筑波大学/ハッカソン/sai_baby_middle_128_3.png\")",
+      "Bash(python3 -c \"from PIL import Image; img=Image.open\\(r'C:/Users/MISAWA/OneDrive - 筑波大学/ハッカソン/sai_baby_middle_128_3.png'\\); print\\(f'Size: {img.size}, Mode: {img.mode}'\\)\")",
+      "Bash(python3 *)",
+      "Bash(flutter analyze *)",
+      "Bash(flutter build *)",
+      "Bash(powershell *)",
+      "WebFetch(domain:getdesign.md)",
+      "Bash(flutter pub *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git mv *)",
+      "Bash(gh repo *)",
+      "Bash(ls lib/)",
+      "Bash(ls android/)",
+      "WebFetch(domain:pub.dev)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:stackoverflow.com)"
+    ]
+  }
+}

@@ -25,6 +25,8 @@ dependencies:
   amplify_flutter: ^2.5.0
   amplify_auth_cognito: ^2.5.0
 
+  flutter_wear_os_connectivity: ^1.0.0
+
   shared_models:
     path: ../shared
 

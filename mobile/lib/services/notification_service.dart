@@ -112,6 +112,14 @@ class NotificationService {
       icon: '@mipmap/ic_launcher',
     );
 
+    _plugin.show(
+      notification.hashCode,
+      notification.title,
+      notification.body,
+      const NotificationDetails(android: androidDetails),
+    );
+  }
+
   /// Web用の通知表示（スタブ - Androidでは未使用）
   static void _showWebNotification(String title, String body) {
     print('Web通知はこのプラットフォームではサポートされていません: $title');

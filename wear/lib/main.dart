@@ -3,11 +3,16 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_models/shared_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibration/vibration.dart';
 
+import 'wear_sync_service.dart';
+
 final FlutterLocalNotificationsPlugin _notifications =
     FlutterLocalNotificationsPlugin();
+
+final WearSyncReceiver _syncReceiver = WearSyncReceiver();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +21,10 @@ Future<void> main() async {
   await _notifications.initialize(
     const InitializationSettings(android: androidInit),
   );
+
+  try {
+    await _syncReceiver.init();
+  } catch (_) {}
 
   final prefs = await SharedPreferences.getInstance();
   runApp(SaiPetWearApp(store: RhinoStore(prefs)));
@@ -156,6 +165,40 @@ class _WearHomeState extends State<WearHome> with TickerProviderStateMixin {
     });
 
     _schedulePeriodicCheck(widget.store);
+    _listenForSync();
+  }
+
+  void _listenForSync() {
+    _syncReceiver.messages.listen((msg) {
+      switch (msg.type) {
+        case SyncType.scoreUpdate:
+        case SyncType.petStateUpdate:
+          final p = msg.payload;
+          final score = p['focusScore'] as int? ?? _state.focusScore;
+          final usage = p['usageMinutes'] as int? ?? _state.usageMinutes;
+          final fullness = p['fullness'] as int? ?? _state.fullness;
+          setState(() {
+            _state = widget.store.updateFromPhone(
+              _state,
+              focusScore: score,
+              usageMinutes: usage,
+              fullness: fullness,
+            );
+          });
+          _vibrate(duration: 100);
+        case SyncType.notificationTrigger:
+          final title = msg.payload['title'] as String? ?? 'サイペット';
+          final body = msg.payload['body'] as String? ?? '';
+          _showNotification(title: title, body: body);
+          _vibrate(duration: 300);
+        case SyncType.feedCommand:
+          _feed();
+        case SyncType.outfitCommand:
+          _cycleOutfit();
+        case SyncType.usageUpdate:
+          break;
+      }
+    });
   }
 
   @override
@@ -916,6 +959,27 @@ class RhinoStore {
     final updated = current.copyWith(
       outfit: outfit,
       lastSyncLabel: 'watch outfit now',
+    );
+    _save(updated);
+    return updated;
+  }
+
+  RhinoState updateFromPhone(
+    RhinoState current, {
+    required int focusScore,
+    required int usageMinutes,
+    required int fullness,
+  }) {
+    final updated = current.copyWith(
+      focusScore: focusScore,
+      usageMinutes: usageMinutes,
+      fullness: fullness,
+      mood: _deriveMood(
+        score: focusScore,
+        usageMinutes: usageMinutes,
+        fullness: fullness,
+      ),
+      lastSyncLabel: 'phone sync now',
     );
     _save(updated);
     return updated;
