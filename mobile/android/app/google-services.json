@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "925346266878",
+    "project_id": "hakathon20260418",
+    "storage_bucket": "hakathon20260418.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:925346266878:android:eacb87937bcd0e26856faf",
+        "android_client_info": {
+          "package_name": "com.sabori.sabori_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWYzKcx7pFtlbK8Ysh9sC-grC03sihadk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

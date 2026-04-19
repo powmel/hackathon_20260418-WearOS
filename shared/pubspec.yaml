@@ -1,0 +1,10 @@
+name: shared_models
+description: Shared data models between mobile and Wear OS apps
+publish_to: 'none'
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter

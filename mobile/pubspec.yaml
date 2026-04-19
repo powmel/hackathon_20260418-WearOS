@@ -1,0 +1,60 @@
+name: sabori_app
+description: "サボり防止アプリ - SNS使用時間を監視してサイが警告！"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  flutter_riverpod: ^2.6.1
+  shared_preferences: ^2.3.4
+  flutter_local_notifications: ^18.0.1
+  fl_chart: ^0.70.2
+  permission_handler: ^11.3.1
+  intl: ^0.19.0
+  audioplayers: ^6.1.0
+  installed_apps: ^1.5.0
+  http: ^1.2.0
+  firebase_core: ^3.13.0
+  firebase_messaging: ^15.2.5
+
+  amplify_flutter: ^2.5.0
+  amplify_auth_cognito: ^2.5.0
+
+  shared_models:
+    path: ../shared
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/sounds/
+    - assets/images/rhino/
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
+  #   - family: Trajan Pro
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/to/font-from-package

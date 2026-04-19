@@ -1,17 +1,30 @@
-# hackathon20260418-wear
+# Sabori App - サボり防止アプリ
 
-Flutter-based Wear OS companion app for the `hackathon20260413` mobile app.
+SNS使用時間を監視してサイが警告するアプリ。スマホ + Wear OS 連携。
 
-## Current scope
+## 構成
 
-- rhino pet home screen tuned for small Wear OS displays
-- focus score, usage minutes, and fullness display
-- rhino mood derived from usage balance
-- score-based feeding action
-- outfit switching on watch
+```
+mobile/   ← Androidスマホアプリ (Flutter + Riverpod)
+wear/     ← Wear OSアプリ (Flutter, たまごっち風UI)
+shared/   ← 共通データモデル (Dartパッケージ)
+```
 
-## Notes
+## mobile/ (スマホアプリ)
+- SNS使用時間のリアルタイム監視
+- サイキャラが反応 (good / warning / over)
+- 30日間の使用傾向分析
+- ランキング機能
+- Firebase + AWS Cognito 認証
 
-- this repo is Flutter-only
-- phone-to-watch sync is not wired yet
-- current watch data is stored locally with `shared_preferences`
+## wear/ (Wear OSアプリ)
+- たまごっち風の部屋でサイペットを飼育
+- Tinder風グラデーションUI
+- スコアでエサやり、服変更
+- バイブレーション & 通知機能
+- ペットの気分で部屋の雰囲気が変化
+
+## shared/ (共通モデル)
+- PetState: ペット状態 (スコア, 使用時間, 元気, 気分, 服)
+- SyncMessage: phone↔watch通信メッセージ
+- Constants: 共通定数
