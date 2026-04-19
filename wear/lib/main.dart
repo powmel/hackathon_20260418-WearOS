@@ -6,16 +6,38 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_models/shared_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibration/vibration.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'wear_sync_service.dart';
+import 'firestore_sync_service.dart';
+import 'firebase_options.dart';
 
 final FlutterLocalNotificationsPlugin _notifications =
     FlutterLocalNotificationsPlugin();
 
 final WearSyncReceiver _syncReceiver = WearSyncReceiver();
+final FirestoreSyncService _firestoreSync = FirestoreSyncService();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Firebase初期化
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('[WearOS] Firebase initialized successfully');
+  } catch (e) {
+    print('[WearOS] Firebase initialization error: $e');
+  }
+
+  // Firestore同期を初期化
+  try {
+    await _firestoreSync.init();
+    print('[WearOS] Firestore sync initialized');
+  } catch (e) {
+    print('[WearOS] Firestore sync error: $e');
+  }
 
   const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
   await _notifications.initialize(
@@ -170,6 +192,25 @@ class _WearHomeState extends State<WearHome> with TickerProviderStateMixin {
     _rankings = _defaultRankings();
     _schedulePeriodicCheck(widget.store);
     _listenForSync();
+    _listenForFirestore();
+  }
+
+  void _listenForFirestore() {
+    _firestoreSync.onDataUpdate = (usageData) {
+      print('[WearOS] Firestore data update: $usageData');
+
+      // 使用率からfullnessを計算（使用率が高いほどサイの元気が減る）
+      final fullness = (100 - usageData.usageRate).clamp(0, 100).toInt();
+
+      setState(() {
+        _state = widget.store.updateFromPhone(
+          _state,
+          focusScore: usageData.efficiencyScore.toInt(),
+          usageMinutes: usageData.todayMinutes,
+          fullness: fullness,
+        );
+      });
+    };
   }
 
   void _listenForSync() {
@@ -298,6 +339,14 @@ class _WearHomeState extends State<WearHome> with TickerProviderStateMixin {
     return Stack(
       children: [
         Positioned.fill(child: _TamaRoom(mood: _state.mood, size: s)),
+
+        // Circular usage time gauge (outer ring)
+        Positioned.fill(
+          child: _CircularUsageGauge(
+            usageMinutes: _state.usageMinutes,
+            size: s,
+          ),
+        ),
 
         Positioned(
           top: s * 0.06,
@@ -793,6 +842,127 @@ class _TinyPlant extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// ─── Circular Usage Gauge (外周リング) ───
+
+class _CircularUsageGauge extends StatelessWidget {
+  const _CircularUsageGauge({
+    required this.usageMinutes,
+    required this.size,
+  });
+
+  final int usageMinutes;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    // 1日の目標時間（分） - 例: 180分 = 3時間
+    const maxMinutes = 180;
+    final progress = (usageMinutes / maxMinutes).clamp(0.0, 1.0);
+
+    // 使用時間に応じて色を変更
+    final gaugeColor = usageMinutes < 60
+        ? TamaColors.mintGreen  // 1時間未満: 緑
+        : usageMinutes < 120
+            ? TamaColors.sunYellow  // 2時間未満: 黄色
+            : usageMinutes < 180
+                ? TamaColors.warmOrange  // 3時間未満: オレンジ
+                : TamaColors.hotPink;  // 3時間以上: ピンク
+
+    return CustomPaint(
+      painter: _CircularGaugePainter(
+        progress: progress,
+        color: gaugeColor,
+        backgroundColor: Colors.white.withValues(alpha: 0.2),
+        strokeWidth: size * 0.035,
+      ),
+      child: Center(
+        child: Padding(
+          padding: EdgeInsets.only(top: size * 0.88),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '$usageMinutes分',
+              style: TextStyle(
+                fontSize: size <= 200 ? 7 : 8,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CircularGaugePainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final Color backgroundColor;
+  final double strokeWidth;
+
+  _CircularGaugePainter({
+    required this.progress,
+    required this.color,
+    required this.backgroundColor,
+    required this.strokeWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (math.min(size.width, size.height) / 2) - strokeWidth / 2;
+
+    // 背景の円
+    final bgPaint = Paint()
+      ..color = backgroundColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawCircle(center, radius, bgPaint);
+
+    // プログレスの円弧
+    if (progress > 0) {
+      final progressPaint = Paint()
+        ..shader = LinearGradient(
+          colors: [
+            color,
+            color.withValues(alpha: 0.7),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ).createShader(Rect.fromCircle(center: center, radius: radius))
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+
+      final sweepAngle = 2 * math.pi * progress;
+      const startAngle = -math.pi / 2; // 12時の位置から開始
+
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        sweepAngle,
+        false,
+        progressPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CircularGaugePainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.color != color ||
+        oldDelegate.backgroundColor != backgroundColor ||
+        oldDelegate.strokeWidth != strokeWidth;
   }
 }
 
