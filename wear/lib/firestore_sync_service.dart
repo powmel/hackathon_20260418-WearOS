@@ -35,9 +35,10 @@ class FirestoreSyncService {
       _startListening();
     } else {
       print('[FirestoreSync] ERROR: No Cognito User ID found');
+      print('[FirestoreSync] Using fallback test user ID for demo');
       // フォールバック: テスト用のデフォルトユーザーID
-      // _cognitoUserId = 'test_user_001';
-      // _startListening();
+      _cognitoUserId = 'test_user_001';
+      _startListening();
     }
   }
 
@@ -90,6 +91,7 @@ class FirestoreSyncService {
             mood: rhinoStatus['mood'] as String? ?? 'calm',
             usageMinutes: data['todayTotalMinutes'] as int? ?? 0,
           );
+          print('[FirestoreSync] RhinoStatus: $rhinoData');
           onRhinoStatusUpdate?.call(rhinoData);
         }
       },

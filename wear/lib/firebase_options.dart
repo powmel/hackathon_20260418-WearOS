@@ -47,11 +47,11 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAWYzKcx7pFtlbK8Ysh9sC-grC03sihadk',
-    appId: '1:925346266878:android:eacb87937bcd0e26856faf',
-    messagingSenderId: '925346266878',
-    projectId: 'hakathon20260418',
-    storageBucket: 'hakathon20260418.firebasestorage.app',
+    apiKey: 'AIzaSyD29luwhQUUAI7mQGksXOzrlH_hPOqbnK0',
+    appId: '1:479706898184:android:d479627a6569e72f8196bd',
+    messagingSenderId: '479706898184',
+    projectId: 'hakkason-63f33',
+    storageBucket: 'hakkason-63f33.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(

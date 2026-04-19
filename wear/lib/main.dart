@@ -198,6 +198,7 @@ class _WearHomeState extends State<WearHome> with TickerProviderStateMixin {
   void _listenForFirestore() {
     _firestoreSync.onDataUpdate = (usageData) {
       print('[WearOS] Firestore data update: $usageData');
+      print('[WearOS] 🔄 Updating UI - usageMinutes: ${usageData.todayMinutes}');
 
       // 使用率からfullnessを計算（使用率が高いほどサイの元気が減る）
       final fullness = (100 - usageData.usageRate).clamp(0, 100).toInt();
@@ -209,6 +210,7 @@ class _WearHomeState extends State<WearHome> with TickerProviderStateMixin {
           usageMinutes: usageData.todayMinutes,
           fullness: fullness,
         );
+        print('[WearOS] ✅ UI Updated - Circular gauge showing: ${_state.usageMinutes} minutes');
       });
     };
   }
