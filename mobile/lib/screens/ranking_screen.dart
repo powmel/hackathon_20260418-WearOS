@@ -4,6 +4,7 @@ import '../constants/app_constants.dart';
 import '../constants/rhino_assets.dart';
 import '../models/app_usage.dart';
 import '../providers/app_providers.dart';
+import '../services/wear_sync_service.dart';
 import '../widgets/common_widgets.dart';
 
 const _maxVisibleRows = 10;
@@ -119,6 +120,23 @@ class _RankingScreenState extends ConsumerState<RankingScreen>
     await ref
         .read(rankingDataProvider.notifier)
         .fetch(sortBy: _tabs[_selectedIndex].sortKey);
+    _syncRankingToWear();
+  }
+
+  void _syncRankingToWear() {
+    final rankingAsync = ref.read(rankingDataProvider);
+    rankingAsync.whenData((rankings) {
+      final sorted = _tabs[0].sorter(rankings);
+      final top10 = sorted.take(10).toList();
+      _wearSync.sendRanking(
+        top10.asMap().entries.map((e) => {
+          'rank': e.key + 1,
+          'displayName': e.value.displayName,
+          'score': e.value.efficiencyScore,
+          'isYou': e.value.userId == 'user_you',
+        }).toList(),
+      );
+    });
   }
 
   @override

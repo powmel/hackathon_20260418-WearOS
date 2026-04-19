@@ -65,6 +65,15 @@ class WearSyncService {
     await _sendToAllDevices(SyncPaths.notifyPath, msg.encode());
   }
 
+  Future<void> sendRanking(List<Map<String, dynamic>> rankings) async {
+    final msg = SyncMessage(
+      type: SyncType.rankingUpdate,
+      payload: {'rankings': rankings},
+      timestamp: DateTime.now(),
+    );
+    await _sendToAllDevices(SyncPaths.rankingPath, msg.encode());
+  }
+
   Future<void> _sendToAllDevices(String path, String data) async {
     try {
       final devices = await _wear.getConnectedDevices();

@@ -34,4 +34,5 @@ enum SyncType {
   feedCommand,
   outfitCommand,
   notificationTrigger,
+  rankingUpdate,
 }

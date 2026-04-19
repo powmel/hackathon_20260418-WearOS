@@ -136,6 +136,9 @@ class _WearHomeState extends State<WearHome> with TickerProviderStateMixin {
   late AnimationController _heartCtrl;
   late Animation<double> _heart;
   bool _showHeart = false;
+  final PageController _pageCtrl = PageController();
+  int _pageIndex = 0;
+  List<RankingEntry> _rankings = [];
 
   @override
   void initState() {
@@ -164,6 +167,7 @@ class _WearHomeState extends State<WearHome> with TickerProviderStateMixin {
       }
     });
 
+    _rankings = _defaultRankings();
     _schedulePeriodicCheck(widget.store);
     _listenForSync();
   }
@@ -197,14 +201,30 @@ class _WearHomeState extends State<WearHome> with TickerProviderStateMixin {
           _cycleOutfit();
         case SyncType.usageUpdate:
           break;
+        case SyncType.rankingUpdate:
+          final list = msg.payload['rankings'] as List<dynamic>? ?? [];
+          setState(() {
+            _rankings = list
+                .map((e) => RankingEntry.fromJson(e as Map<String, dynamic>))
+                .toList();
+          });
       }
     });
   }
+
+  List<RankingEntry> _defaultRankings() => const [
+        RankingEntry(rank: 1, displayName: 'サイ太郎', score: 92.4, isYou: false),
+        RankingEntry(rank: 2, displayName: 'ホーン花子', score: 85.1, isYou: false),
+        RankingEntry(rank: 3, displayName: '角の助', score: 78.8, isYou: false),
+        RankingEntry(rank: 4, displayName: 'あなた', score: 72.3, isYou: true),
+        RankingEntry(rank: 5, displayName: 'リノ次郎', score: 65.0, isYou: false),
+      ];
 
   @override
   void dispose() {
     _bounceCtrl.dispose();
     _heartCtrl.dispose();
+    _pageCtrl.dispose();
     super.dispose();
   }
 
@@ -236,122 +256,333 @@ class _WearHomeState extends State<WearHome> with TickerProviderStateMixin {
 
         return Stack(
           children: [
-            // Background: warm tamagotchi room
-            Positioned.fill(child: _TamaRoom(mood: _state.mood, size: s)),
-
-            // Score badge (top)
+            PageView(
+              controller: _pageCtrl,
+              onPageChanged: (i) => setState(() => _pageIndex = i),
+              children: [
+                _buildPetPage(s),
+                _WearRankingPage(rankings: _rankings, size: s),
+              ],
+            ),
+            // Page dots (bottom center)
             Positioned(
-              top: s * 0.06,
+              bottom: s * 0.02,
               left: 0,
               right: 0,
-              child: _ScoreBadge(score: _state.focusScore, size: s),
-            ),
-
-            // Pet
-            Positioned(
-              left: 0,
-              right: 0,
-              top: s * 0.24,
-              child: AnimatedBuilder(
-                animation: _bounce,
-                builder: (_, child) => Transform.translate(
-                  offset: Offset(0, _bounce.value),
-                  child: child,
-                ),
-                child: _Pet(
-                  state: _state,
-                  size: s,
-                  showHeart: _showHeart,
-                  heartAnimation: _heart,
-                ),
-              ),
-            ),
-
-            // Mood text
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: s * 0.28,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    _state.mood.label,
-                    style: TextStyle(
-                      fontSize: s <= 200 ? 9 : 10,
-                      fontWeight: FontWeight.w700,
-                      color: TamaColors.darkBrown,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Fullness bar
-            Positioned(
-              bottom: s * 0.19,
-              left: s * 0.2,
-              right: s * 0.2,
-              child: _FullnessBar(fullness: _state.fullness, size: s),
-            ),
-
-            // Action buttons
-            Positioned(
-              bottom: s * 0.06,
-              left: s * 0.12,
-              right: s * 0.12,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _ActionBtn(
-                    icon: Icons.restaurant_rounded,
-                    label: 'エサ',
-                    gradient: TamaColors.tinderGradient,
-                    enabled: _state.focusScore >= RhinoStore.feedCost,
-                    onTap: _feed,
-                    size: s,
-                  ),
-                  _ActionBtn(
-                    icon: Icons.checkroom_rounded,
-                    label: _state.outfit.label,
-                    gradient: [
-                      _state.outfit.color,
-                      _state.outfit.color.withValues(alpha: 0.7),
-                    ],
-                    enabled: true,
-                    onTap: _cycleOutfit,
-                    size: s,
-                  ),
-                  _ActionBtn(
-                    icon: Icons.notifications_rounded,
-                    label: 'お知らせ',
-                    gradient: TamaColors.calmGradient,
-                    enabled: true,
-                    onTap: () async {
-                      await _vibrate(duration: 200);
-                      await _showNotification(
-                        title: 'サイペットからのお知らせ 🦏',
-                        body: 'スコア: ${_state.focusScore}pt / げんき: ${_state.fullness}%',
-                      );
-                    },
-                    size: s,
-                  ),
-                ],
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(2, (i) {
+                  final active = i == _pageIndex;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: active ? 14 : 5,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: active
+                          ? TamaColors.hotPink
+                          : Colors.white.withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  );
+                }),
               ),
             ),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildPetPage(double s) {
+    return Stack(
+      children: [
+        Positioned.fill(child: _TamaRoom(mood: _state.mood, size: s)),
+
+        Positioned(
+          top: s * 0.06,
+          left: 0,
+          right: 0,
+          child: _ScoreBadge(score: _state.focusScore, size: s),
+        ),
+
+        Positioned(
+          left: 0,
+          right: 0,
+          top: s * 0.24,
+          child: AnimatedBuilder(
+            animation: _bounce,
+            builder: (_, child) => Transform.translate(
+              offset: Offset(0, _bounce.value),
+              child: child,
+            ),
+            child: _Pet(
+              state: _state,
+              size: s,
+              showHeart: _showHeart,
+              heartAnimation: _heart,
+            ),
+          ),
+        ),
+
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: s * 0.28,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.85),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
+              child: Text(
+                _state.mood.label,
+                style: TextStyle(
+                  fontSize: s <= 200 ? 9 : 10,
+                  fontWeight: FontWeight.w700,
+                  color: TamaColors.darkBrown,
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        Positioned(
+          bottom: s * 0.19,
+          left: s * 0.2,
+          right: s * 0.2,
+          child: _FullnessBar(fullness: _state.fullness, size: s),
+        ),
+
+        Positioned(
+          bottom: s * 0.06,
+          left: s * 0.12,
+          right: s * 0.12,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _ActionBtn(
+                icon: Icons.restaurant_rounded,
+                label: 'エサ',
+                gradient: TamaColors.tinderGradient,
+                enabled: _state.focusScore >= RhinoStore.feedCost,
+                onTap: _feed,
+                size: s,
+              ),
+              _ActionBtn(
+                icon: Icons.checkroom_rounded,
+                label: _state.outfit.label,
+                gradient: [
+                  _state.outfit.color,
+                  _state.outfit.color.withValues(alpha: 0.7),
+                ],
+                enabled: true,
+                onTap: _cycleOutfit,
+                size: s,
+              ),
+              _ActionBtn(
+                icon: Icons.notifications_rounded,
+                label: 'お知らせ',
+                gradient: TamaColors.calmGradient,
+                enabled: true,
+                onTap: () async {
+                  await _vibrate(duration: 200);
+                  await _showNotification(
+                    title: 'サイペットからのお知らせ 🦏',
+                    body: 'スコア: ${_state.focusScore}pt / げんき: ${_state.fullness}%',
+                  );
+                },
+                size: s,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Wear Ranking Page ───
+
+class _WearRankingPage extends StatelessWidget {
+  const _WearRankingPage({required this.rankings, required this.size});
+
+  final List<RankingEntry> rankings;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final isSmall = size <= 200;
+    final bgGradient = [const Color(0xFFFFF1D0), const Color(0xFFFFE4B5)];
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: bgGradient,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            size * 0.1,
+            size * 0.1,
+            size * 0.1,
+            size * 0.08,
+          ),
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSmall ? 8 : 10,
+                  vertical: isSmall ? 3 : 4,
+                ),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFFD700), Color(0xFFFFA726)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFFD700).withValues(alpha: 0.35),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.emoji_events_rounded,
+                      size: isSmall ? 12 : 14,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'ランキング',
+                      style: TextStyle(
+                        fontSize: isSmall ? 10 : 11,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: isSmall ? 6 : 8),
+
+              // Ranking list
+              Expanded(
+                child: rankings.isEmpty
+                    ? Center(
+                        child: Text(
+                          'データなし',
+                          style: TextStyle(
+                            fontSize: isSmall ? 9 : 10,
+                            color: TamaColors.warmGray,
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: EdgeInsets.zero,
+                        itemCount: rankings.length,
+                        itemBuilder: (context, index) {
+                          final entry = rankings[index];
+                          return _RankingRow(
+                            entry: entry,
+                            isSmall: isSmall,
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RankingRow extends StatelessWidget {
+  const _RankingRow({required this.entry, required this.isSmall});
+
+  final RankingEntry entry;
+  final bool isSmall;
+
+  @override
+  Widget build(BuildContext context) {
+    final medal = switch (entry.rank) {
+      1 => '🥇',
+      2 => '🥈',
+      3 => '🥉',
+      _ => '${entry.rank}',
+    };
+    final isMedal = entry.rank <= 3;
+    final rowHeight = isSmall ? 24.0 : 28.0;
+
+    return Container(
+      height: rowHeight,
+      margin: const EdgeInsets.symmetric(vertical: 1.5),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      decoration: BoxDecoration(
+        color: entry.isYou
+            ? TamaColors.hotPink.withValues(alpha: 0.15)
+            : Colors.white.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(8),
+        border: entry.isYou
+            ? Border.all(color: TamaColors.hotPink.withValues(alpha: 0.4), width: 1)
+            : null,
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: isSmall ? 20 : 24,
+            child: Text(
+              medal,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: isMedal ? (isSmall ? 11 : 13) : (isSmall ? 9 : 10),
+                fontWeight: FontWeight.w800,
+                color: isMedal ? null : TamaColors.warmGray,
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              entry.isYou ? '${entry.displayName} (あなた)' : entry.displayName,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: isSmall ? 8 : 9,
+                fontWeight: entry.isYou ? FontWeight.w800 : FontWeight.w600,
+                color: entry.isYou ? TamaColors.hotPink : TamaColors.darkBrown,
+              ),
+            ),
+          ),
+          Text(
+            entry.score.toStringAsFixed(1),
+            style: TextStyle(
+              fontSize: isSmall ? 8 : 9,
+              fontWeight: FontWeight.w800,
+              color: entry.score >= 80
+                  ? TamaColors.mintGreen
+                  : entry.score >= 50
+                      ? TamaColors.warmOrange
+                      : TamaColors.hotPink,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

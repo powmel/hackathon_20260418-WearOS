@@ -19,6 +19,7 @@ class WearSyncReceiver {
     _listenMessages(SyncPaths.notifyPath);
     _listenMessages(SyncPaths.feedCommandPath);
     _listenMessages(SyncPaths.outfitCommandPath);
+    _listenMessages(SyncPaths.rankingPath);
   }
 
   void _listenMessages(String path) {

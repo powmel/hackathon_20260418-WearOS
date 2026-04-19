@@ -5,6 +5,7 @@ class SyncPaths {
   static const feedCommandPath = '/command/feed';
   static const outfitCommandPath = '/command/outfit';
   static const notifyPath = '/notify';
+  static const rankingPath = '/ranking';
 
   static const channelName = 'sai_pet_sync';
 }
