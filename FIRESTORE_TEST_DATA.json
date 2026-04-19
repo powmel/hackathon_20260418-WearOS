@@ -1,0 +1,20 @@
+{
+  "users": {
+    "test_user_001": {
+      "userId": "test_user_001",
+      "displayName": "テストユーザー",
+      "todayTotalMinutes": 45,
+      "timeLimitMinutes": 180,
+      "usageRate": 25.0,
+      "weeklyTotalMinutes": 320,
+      "streakDays": 5,
+      "efficiencyScore": 85.5,
+      "rhinoStatus": {
+        "focusScore": 80,
+        "fullness": 75,
+        "mood": "happy",
+        "lastUpdated": "2026-04-19T14:00:00Z"
+      }
+    }
+  }
+}
