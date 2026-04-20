@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit -m 'Add Firebase integration and circular usage gauge to Wear app *)",
+      "Bash(adb -s emulator-5556 logcat -c)",
+      "Bash(gh auth *)",
+      "Read(//Users/gotorius/**)"
+    ]
+  }
+}
